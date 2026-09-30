@@ -1,0 +1,12 @@
+{
+  "_rules": "Agents may only flip passes false->true after scripts/test.sh passes, or append slices agreed with the human. Never delete, reorder or reword entries.",
+  "slices": [
+    {
+      "id": "<feat>-01",
+      "feature": "<FEAT>",
+      "title": "<thinnest useful end-to-end path>",
+      "acceptance": ["<observable behaviour the end-to-end test checks>"],
+      "passes": false
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "{{NAME}}",
+  "created": "{{CREATED}}",
+  "status": "in_progress",
+  "round": 0,
+  "threshold": 8,
+  "max_rounds": 5,
+  "score_max": 10,
+  "last_score": null,
+  "last_verdict": null,
+  "accepted_document": null,
+  "history": []
+}

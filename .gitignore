@@ -1,0 +1,27 @@
+# Secrets — only .env.example is committed
+.env
+.env.*
+!.env.example
+secrets/
+
+# Local run outputs and data (see AGENTS.md › Directory conventions)
+results/
+data/
+
+# Personal Claude Code settings
+.claude/settings.local.json
+CLAUDE.local.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
