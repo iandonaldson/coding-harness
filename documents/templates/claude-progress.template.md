@@ -13,8 +13,7 @@
 - <…>
 
 ## Test status
-<`scripts/test.sh` result from the last full run, e.g. "42 passed, 0 failed (2026-09-30)">
-Fingerprint: <`scripts/fingerprint.sh` output for the code that run tested>
+<`scripts/test.sh` result from the last run, e.g. "42 passed, 0 failed (2026-09-30)">
 
 ## Walkthroughs
 - <[NNN.name](code_walkthroughs/NNN.name.md) — one line>

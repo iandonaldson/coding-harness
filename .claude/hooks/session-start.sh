@@ -37,6 +37,19 @@ else
   echo "### $PROGRESS is missing — this is an INITIALIZER session (see AGENTS.md › Initializer)."
 fi
 
+BASELINE=documents/test-baseline.json
+if [ -f "$BASELINE" ] && command -v python3 >/dev/null 2>&1; then
+  echo
+  echo "### Last full test run ($BASELINE)"
+  python3 - "$BASELINE" <<'PY' || echo "(could not parse $BASELINE)"
+import json, sys
+found = json.load(open(sys.argv[1]))
+print(f"{found['date']}: {found['passed']} passed, {found['failed']} failed, "
+      f"{found['skipped']} skipped (fingerprint {found['fingerprint']}). "
+      "`scripts/test.sh --baseline` skips the full run when the code is unchanged.")
+PY
+fi
+
 FEATURES=documents/feature-list.json
 if [ -f "$FEATURES" ] && command -v python3 >/dev/null 2>&1; then
   echo

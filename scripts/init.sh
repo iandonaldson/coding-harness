@@ -8,6 +8,8 @@ cd "$(dirname "$0")/.."
 #   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 #   npm ci
 #   docker compose up -d db
+# Then the baseline: the full suite, unless the code is as at the recorded run (AGENTS.md):
+#   scripts/test.sh --baseline
 
 echo "scripts/init.sh: not configured for this project yet" >&2
 exit 1

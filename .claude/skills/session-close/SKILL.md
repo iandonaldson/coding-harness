@@ -33,10 +33,12 @@ through git history. It changes **only docs**; it never alters code or test coun
 
 Record the pass count of the last full `scripts/test.sh` run on the code being closed: in
 fold-in mode, the run made after the slice's last code change (AGENTS.md › *Finishing a
-slice*); in standalone mode, the count recorded in the progress log for `main`. Run the full
-suite only when no such run exists for the current code. If it is red beyond the known
-failures, stop and ask the human — fixing code is out of scope here. Note that run's
-`scripts/fingerprint.sh` output (taken with the slice's code committed) for step 3.
+slice*); in standalone mode, the count recorded in the progress log for `main`.
+`documents/test-baseline.json` holds that run's counts and the code's fingerprint:
+`scripts/test.sh --fingerprint` must print the same fingerprint, or the code changed after
+the run. Run the full suite only when no such run exists for the current code; it records
+itself. Commit `documents/test-baseline.json` with the close (step 7 stages `documents/`). If it is red beyond the known
+failures, stop and ask the human — fixing code is out of scope here.
 
 ### 2. Slice status — `documents/feature-list.json` and `feature-list.md`
 
@@ -55,8 +57,6 @@ Update the sections defined in
 [`documents/templates/claude-progress.template.md`](../../../documents/templates/claude-progress.template.md):
 
 - **Last updated / Current status / Active slice / Test status** — reflect this session.
-  *Test status* gets the full run's result and its `Fingerprint:` (step 1); the next
-  session skips its baseline run when the code still matches it.
 - **Walkthroughs** — add any walkthrough written in step 5.
 - **Next steps** — remove what's done; add gaps this session *found* but didn't fix. Order:
   blockers > behaviour gaps > polish. Every item must trace to an artefact (TODO, failing
@@ -125,7 +125,7 @@ to the prototype-close session.
 - [ ] Progress log *Next steps* has nothing already done, and each item cites an artefact
 - [ ] New `L-NN` entries cite a PR or commit
 - [ ] New walkthrough (if any) is linked from the walkthrough index and the progress log
-- [ ] *Test status* has the last full run's result and fingerprint
+- [ ] `documents/test-baseline.json` is the last full run's, on this code (step 1)
 - [ ] Prototype mode: every auto-accepted choice of this slice is in the decision log
 
 ## Anti-patterns
