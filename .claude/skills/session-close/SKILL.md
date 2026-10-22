@@ -33,8 +33,11 @@ through git history. It changes **only docs**; it never alters code or test coun
 
 Record the pass count of the last full `scripts/test.sh` run on the code being closed: in
 fold-in mode, the run made after the slice's last code change (AGENTS.md › *Finishing a
-slice*); in standalone mode, the count recorded in the progress log for `main`. Run the full
-suite only when no such run exists for the current code. If it is red beyond the known
+slice*); in standalone mode, the count recorded in the progress log for `main`.
+`documents/test-baseline.json` holds that run's counts and the code's fingerprint:
+`scripts/test.sh --fingerprint` must print the same fingerprint, or the code changed after
+the run. Run the full suite only when no such run exists for the current code; it records
+itself. Commit `documents/test-baseline.json` with the close (step 7 stages `documents/`). If it is red beyond the known
 failures, stop and ask the human — fixing code is out of scope here.
 
 ### 2. Slice status — `documents/feature-list.json` and `feature-list.md`
