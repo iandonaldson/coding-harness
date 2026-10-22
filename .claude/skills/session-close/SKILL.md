@@ -115,7 +115,8 @@ runs **every session**, but only steps 1–4 and 7, plus:
 - the decision-log entries for the slice are present (AGENTS.md › *Prototype mode*).
 
 Steps 5 and 6 (walkthrough, `README.md`) and the glossary's term definitions are deferred
-to the prototype-close session.
+to the prototype-close session. After step 7, continue with AGENTS.md › Prototype mode
+(self-merge into `prototype`, then chaining), not with asking the human to merge.
 
 ## Checklist
 
