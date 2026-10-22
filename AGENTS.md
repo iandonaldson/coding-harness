@@ -25,6 +25,8 @@ file, so Claude Code and other AGENTS.md-aware tools read the same rules.
 |---|---|---|
 | [`documents/product_description.md`](documents/product_description.md) | What we are building | Human |
 | [`documents/feature-list.md`](documents/feature-list.md) | Features and their slice definitions (prose) | Human + agent in planning |
+| [`documents/glossary.md`](documents/glossary.md) | Controlled vocabulary: use its terms, flag invented ones | Human + agent (reviewed) |
+| [`documents/adr/`](documents/adr/README.md) | Architecture decision records (process: ADR 000) | Agent proposes, human merges |
 | [`documents/feature-list.json`](documents/feature-list.json) | **Single source of truth for slice status** (`passes`) | Agent — see rules below |
 | `documents/claude-progress.md` | Session hand-off log (created by the initializer) | Agent, every session |
 | [`scripts/init.sh`](scripts/init.sh) | Set up the dev environment + smoke test | Initializer, then as needed |
@@ -67,11 +69,14 @@ Runs once, when `documents/claude-progress.md` does not exist.
    session first.
 3. Fill in `documents/feature-list.json` from the slices in `feature-list.md`
    (all `"passes": false`).
-4. Make `scripts/init.sh` and `scripts/test.sh` work for this project's stack.
-5. Create `documents/claude-progress.md` from
+4. Make `scripts/init.sh` and `scripts/test.sh` work for this project's stack. Keep the
+   harness checks at the top of `scripts/test.sh`.
+5. Record the stack choice as `documents/adr/001-<stack>.md` (see ADR 000), add the
+   product's terms to `documents/glossary.md`, and remove its `TEMPLATE PLACEHOLDER`.
+6. Create `documents/claude-progress.md` from
    [`documents/templates/claude-progress.template.md`](documents/templates/claude-progress.template.md).
-6. Replace the `<…>` placeholders in this file and in `README.md`.
-7. Commit: `chore: initialise agent harness`.
+7. Replace the `<…>` placeholders in this file and in `README.md`.
+8. Commit: `chore: initialise agent harness`.
 
 ---
 
@@ -92,6 +97,16 @@ Runs once, when `documents/claude-progress.md` does not exist.
   agreed, add the feature to `feature-list.md`, split it into thin end-to-end slices
   (elephant carpaccio), and append them to `feature-list.json`. The next session plans and
   implements the first one.
+
+## Research and investigation
+
+Every slice starts with a short investigation step: before building something, look for an
+open standard or maintained library that already does it, and record a significant decision
+as an ADR ([ADR 000](documents/adr/000-record-architecture-decisions.md)). For web
+research, use the `tavily-*` skills (`tavily-search`, `tavily-extract`, `tavily-research`)
+when they are installed and `TAVILY_API_KEY` is set; otherwise fall back to WebSearch /
+WebFetch. Cite sources in the ADR. To look for an existing agent skill before writing
+one, use [`find-skills`](.claude/skills/find-skills/SKILL.md) and follow its local rules.
 
 ---
 
@@ -115,8 +130,31 @@ fresh branch (e.g. a worktree the app created), keep it and bring it up to date 
 another session may share the working tree (see
 [code-learnings §G-01](.claude/skills/code-learnings/SKILL.md#g-01)).
 
-**Finishing a slice:** run session-close (optional), push the branch, open a PR, then
-tell the human to merge it. Do not start the next slice until they confirm.
+**Finishing a slice:**
+
+1. `scripts/test.sh` is green.
+2. **AI review before the PR** — see *Pre-PR AI review* below.
+3. Run session-close (optional).
+4. Push the branch, open a PR, then tell the human to merge it. Do not start the next
+   slice until they confirm.
+
+### Pre-PR AI review
+
+An independent AI review runs on every slice branch before it is pushed, so human review
+can focus on design and depth rather than mechanical bugs.
+
+1. Run the built-in Claude Code **`code-review`** skill at `high` against the branch diff
+   (`origin/main...HEAD`). It reviews from a fresh context, not the implementing session's
+   reasoning. Other agent tools without that skill: spawn a fresh-context reviewer
+   subagent with the diff and this file, and ask for correctness findings only.
+2. For slices touching <security-sensitive areas, e.g. authentication, permissions,
+   tenancy, secrets, egress, sandboxing>, also run the built-in **`security-review`** skill.
+3. Fix confirmed findings, add a regression test where a finding was a real bug, and
+   re-run `scripts/test.sh`.
+4. In the PR description, add an **AI review** section: the review level, findings fixed,
+   and findings not fixed with the reason for each. Never hide a finding.
+
+The AI review supplements human review; it never approves or merges anything.
 
 ---
 
@@ -148,6 +186,7 @@ Pause and ask before proceeding if:
 
 - A slice needs an external account or credential (<e.g. OpenAI, Anthropic, Azure>).
 - Infrastructure must be provisioned (<e.g. Azure>).
+- A slice depends on an open question (`[OQ-n]`) in the product description.
 - A decision affects the data model or an API contract.
 - Tests fail and the cause is unclear after one investigation pass.
 - You are about to delete or overwrite something non-trivial.

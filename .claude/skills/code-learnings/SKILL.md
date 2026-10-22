@@ -69,6 +69,10 @@ harness template repo.
 | [G-13](#g-13) | Text-fragment (`#:~:text=`) links need a verbatim quote |
 | [G-14](#g-14) | `set -u` doesn't fire inside a short-circuited `[[ a && b ]]` |
 | [G-15](#g-15) | macOS has no `timeout`; treat exit 127 as a hard error |
+| [G-16](#g-16) | Debugging is finding which assumption is wrong — test even the basic ones, above all at interfaces |
+| [G-17](#g-17) | A test that mixes a fixed clock with the real clock is a time bomb |
+| [G-18](#g-18) | A merged PR's branch still accepts pushes — check the PR is open first |
+| [G-19](#g-19) | Python's bytecode cache is keyed by mtime (seconds) and size — fast rewrites run stale code |
 | — | *No project lessons yet* |
 
 ---
@@ -244,6 +248,68 @@ guard only special-cased 124, so the wait silently no-op'd and the job was belie
 
 **Rule:** Don't assume GNU coreutils on macOS (`timeout` is `gtimeout` via Homebrew). Prefer the
 agent tool's own timeout. When branching on a wrapper's exit code, treat 127 as an error.
+
+<a id="g-16"></a>
+## G-16: Debugging is finding which assumption is wrong — test even the basic ones, above all at interfaces
+
+**Lesson:** A hosted model's replies held its reasoning inside `content`. The session
+described the format from printed message tails ("a closing `</reasoning>` tag") and asked
+the human to decide before reading the interface's documentation. The docs and recorded
+replies showed a leading `<reasoning>` block in every reply, which changed the code. The
+same day, a surprising eval result was first explained by plausible causes; each had to be
+tested live before any held.
+
+**Rule:** When something surprises you, list every assumption the explanation rests on, from
+the most basic (the request is what you think, the other system reads it as you think, the
+docs say what you remember, the result reproduces) and test each one, cheapest first.
+Between two systems (an API, a runtime, a template, a tool's schema), read their
+documentation and record the raw exchange before describing or deciding anything. Bring
+the human a decision with its evidence, not a guess to approve.
+
+<a id="g-17"></a>
+## G-17: A test that mixes a fixed clock with the real clock is a time bomb
+
+**Lesson:** A test created one record through a CLI subprocess (real clock), then a second
+through the library with a clock fixed at a literal date one day ahead, and asserted the
+ids increased. It passed on the day it was written and in review, then failed two days
+later when "now" overtook the fixed date. The same mix also caused a same-second flake.
+
+**Rule:** In one test, use one time source for everything ordered. When part of the flow
+must use the real clock (a subprocess), derive every other time from the current time
+(`now + 1 day`), or wait for the real clock to pass a recorded value — never a literal date.
+
+**Detection:** grep tests that call a subprocess and also pass a literal date; run the
+suite with the system date set a year ahead (e.g. `faketime`).
+
+<a id="g-18"></a>
+## G-18: A merged PR's branch still accepts pushes — check the PR is open first
+
+**Lesson:** The human merged a PR while the session was still amending the slice. The
+session then pushed two more commits to the same branch and edited the PR description.
+`git push` and the description edit both succeeded, so nothing signalled a problem — but the
+work never reached `main`, and the merged PR's description listed changes it did not contain.
+
+**Rule:** Before pushing to a PR's branch or editing its description, check its state
+(`gh pr view <n> --json state,mergedAt`). If it is merged, branch from `origin/main`,
+cherry-pick the new commits and open a follow-up PR. Never describe unmerged work in a
+merged PR's body.
+
+See §G-03.
+
+<a id="g-19"></a>
+## G-19: Python's bytecode cache is keyed by mtime (seconds) and size — fast rewrites run stale code
+
+**Lesson:** A test edited a module twice and imported it after each edit. Both edits
+happened to change the file's length by the same amount. In a fast container the two writes
+landed in the same second, so the `.pyc` from the first edit still matched (mtime and size)
+and the first edit ran again: the test failed every time there, though it had passed for
+weeks elsewhere.
+
+**Rule:** A test that rewrites a module and imports it again must remove the `__pycache__`
+beside it (or vary the size, or set `PYTHONDONTWRITEBYTECODE=1`). Do not rely on the clock
+moving between writes.
+
+**Detection:** a failure that names the previous edit's error, appearing only on fast machines.
 
 ---
 

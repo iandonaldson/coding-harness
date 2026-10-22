@@ -15,3 +15,8 @@
 
 ## Success criteria
 <How we will know it works — measurable where possible.>
+
+## Open questions
+<Decisions not yet made, each tagged so slices and ADRs can cite it, e.g.
+`[OQ-1]` <question> — <who decides, by when>. A slice that depends on an open question
+waits for the human's answer (AGENTS.md › When to ask the human).>
