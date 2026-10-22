@@ -30,7 +30,8 @@ file, so Claude Code and other AGENTS.md-aware tools read the same rules.
 | [`documents/feature-list.json`](documents/feature-list.json) | **Single source of truth for slice status** (`passes`) | Agent — see rules below |
 | `documents/claude-progress.md` | Session hand-off log (created by the initializer) | Agent, every session |
 | [`scripts/init.sh`](scripts/init.sh) | Set up the dev environment + smoke test | Initializer, then as needed |
-| [`scripts/test.sh`](scripts/test.sh) | Run the full test suite — the only test entry point | Initializer, then as needed |
+| [`scripts/test.sh`](scripts/test.sh) | Run the full test suite (in parallel where the runner can) — the only test entry point; `--baseline` skips an unchanged one | Initializer, then as needed |
+| `documents/test-baseline.json` | The last full run's result and the code's fingerprint, written by `scripts/test.sh` | `scripts/test.sh`; committed with the slice |
 | [`.claude/skills/code-learnings/SKILL.md`](.claude/skills/code-learnings/SKILL.md) | Durable lessons (L-NN) | Agent at session close |
 | `documents/code_walkthroughs/NNN.<name>.md` | Per-slice reference docs | Agent at session close |
 
@@ -52,8 +53,11 @@ slices into context. Using that output:
    slice still marked `"passes": false`, verify its tests and fix the record before
    anything else.
 3. **Branch** — follow *Git workflow* to get onto a fresh slice branch.
-4. **Baseline** — run `scripts/test.sh`. If it is red, stop and investigate before
-   touching anything (see *When to ask the human*).
+4. **Baseline** — run `scripts/test.sh --baseline` (`scripts/init.sh` runs it). When the
+   code's fingerprint equals the one in `documents/test-baseline.json`, it reports that
+   recorded run and runs only the harness checks (and any test that reads prose); otherwise
+   it runs the full suite and records it. If it is red beyond the recorded or known
+   failures, stop and investigate before touching anything (see *When to ask the human*).
 5. **Learnings** — skim the index of [`code-learnings`](.claude/skills/code-learnings/SKILL.md).
 6. Only then begin implementation.
 
@@ -69,8 +73,10 @@ Runs once, when `documents/claude-progress.md` does not exist.
    session first.
 3. Fill in `documents/feature-list.json` from the slices in `feature-list.md`
    (all `"passes": false`).
-4. Make `scripts/init.sh` and `scripts/test.sh` work for this project's stack. Keep the
-   harness checks at the top of `scripts/test.sh`.
+4. Make `scripts/init.sh` and `scripts/test.sh` work for this project's stack: in
+   `test.sh`, fill in `environment` (toolchain and installed packages, for the
+   fingerprint), `run_full` (the full suite, in parallel where the runner can, writing a
+   JUnit XML report), `run_some` and `TESTS_READ_PROSE`. Keep the harness checks first.
 5. Record the stack choice as `documents/adr/001-<stack>.md` (see ADR 000), add the
    product's terms to `documents/glossary.md`, and remove its `TEMPLATE PLACEHOLDER`.
 6. Create `documents/claude-progress.md` from
@@ -173,7 +179,15 @@ The AI review supplements human review; it never approves or merges anything.
 ## Tests
 
 - `scripts/test.sh` is the only way to run the suite — never hard-code a runner command
-  elsewhere.
+  elsewhere. With no arguments it runs the full suite (in parallel where the runner can)
+  and records the result with the code's fingerprint in `documents/test-baseline.json`;
+  commit that file with the slice, so the next session can skip its baseline
+  (`--baseline`). With arguments it runs that subset and records nothing.
+- While working, run the tests of the code you change; run the full suite once at the end
+  of the slice, after the pre-PR reviews' fixes, so the recorded run is of the code that is
+  pushed.
+- Test ids must be the same in every process that collects them: never build a parameter
+  from a random or time-based value (a parallel runner refuses to start otherwise).
 - Run tests in the **foreground** and wait for them. Do not start a test run in the
   background and carry on working.
 - If a run hangs, stop it, then re-run a smaller subset in the foreground to isolate it.

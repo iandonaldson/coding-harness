@@ -56,7 +56,7 @@ documents/
   claude-progress.md            session hand-off log (created by the initializer)
   templates/                    template for the progress log
   code_walkthroughs/            NNN.<name>.md reference docs
-scripts/init.sh, scripts/test.sh  (test.sh --harness: harness checks only)
+scripts/init.sh, scripts/test.sh  (test.sh --harness: harness checks only; --baseline: skip an unchanged full run)
 tests/harness/                  stdlib checks on the feature list, ADRs and glossary
 .claude/
   settings.json                 shared hooks + permissions (committed)
