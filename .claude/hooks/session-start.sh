@@ -20,7 +20,12 @@ fi
 
 echo
 MODE_FILE=documents/harness-mode
-MODE=$(sed -n 's/^mode:[[:space:]]*\([a-z]*\).*/\1/p' "$MODE_FILE" 2>/dev/null)
+MODE=$(sed -n 's/^[[:space:]]*mode:[[:space:]]*\([A-Za-z]*\).*/\1/p' "$MODE_FILE" 2>/dev/null \
+       | head -1 | tr '[:upper:]' '[:lower:]')
+case "${MODE:-normal}" in
+  normal|prototype) ;;
+  *) echo "WARNING: $MODE_FILE has unknown mode '$MODE' — treating it as normal"; MODE=normal ;;
+esac
 echo "### Harness mode: ${MODE:-normal}"
 if [ "$MODE" = "prototype" ]; then
   LIMIT=$(sed -n 's/^chain-limit:[[:space:]]*\([0-9]*\).*/\1/p' "$MODE_FILE")

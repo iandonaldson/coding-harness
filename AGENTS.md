@@ -242,23 +242,31 @@ untouched until the prototype closes. If it does not exist yet, create it from `
 (`git push origin origin/main:refs/heads/prototype`). Each slice:
 
 1. Branches from it: `git fetch origin && git switch -c claude/<slice-id>-<desc> origin/prototype`.
+   A session already placed on a fresh branch keeps it but brings it up to date with
+   `origin/prototype` (not `origin/main`, as *Git workflow* says for normal mode) before
+   the baseline.
 2. Finishes as in *Finishing a slice* — green tests and the **AI review at `high`** still
    apply — then opens a PR into `prototype`, so every slice has its own reviewable PR.
 3. Merges itself: `git fetch origin prototype && git merge origin/prototype`. If the
    merge brought anything, resolve any conflict (a conflict in
    `documents/test-baseline.json` is resolved by the re-run), run `scripts/test.sh
-   --baseline` — it re-runs the full suite only if the code changed — and commit the
-   updated `documents/test-baseline.json`. Then `git push origin HEAD:prototype`. That fast-forwards `prototype` and GitHub marks the
-   PR merged. If the push is refused, fetch, merge and retry; never force.
+   --baseline` — it re-runs the full suite only if the code changed — and go on only if
+   it is green (or fails only on the recorded failures); otherwise it is the red-tests
+   hard stop. Commit the updated `documents/test-baseline.json`, then
+   `git push origin HEAD:prototype`. That fast-forwards `prototype` and GitHub marks the
+   PR merged. If the push is refused because `prototype` moved, fetch, merge and retry;
+   never force. If it is refused for permission (some environments let a session push
+   only to its own branch), that is a hard stop: record it and tell the human.
 
 Review comments that arrive on an already-merged slice PR become a new slice.
 
 **Session-close every session** (one slice per session, so the hand-off matters):
-`feature-list.json` status, the progress log, `documents/test-baseline.json` (so the
-next session skips its baseline run), and `code-learnings` lessons. When a document uses a new acronym, add a one-line row to the
-glossary's *Acronyms* table so the harness checks stay green. **Deferred to
-prototype-close:** walkthroughs, the glossary's term definitions and `README.md`. Instead
-of a walkthrough, add a short *what and why* note for the slice to the progress log.
+`feature-list.json` status, the progress log, `documents/test-baseline.json` (so the next
+session skips its baseline run), and `code-learnings` lessons. When a document uses a new
+acronym, add a one-line row to the glossary's *Acronyms* table so the harness checks stay
+green. **Deferred to prototype-close:** walkthroughs, the glossary's term definitions and
+`README.md`. Instead of a walkthrough, add a short *what and why* note for the slice to
+the progress log.
 
 **Chaining.** Every slice starts in a new session. After the slice is merged into
 `prototype`, if a `"passes": false` slice remains, no hard stop is open, and the chain is
@@ -283,6 +291,7 @@ session on a branch from `origin/prototype`:
    agreement) to revisit it.
 3. Run the AI review at `high` on the whole prototype (`origin/main...HEAD`), plus
    `security-review` where *Pre-PR AI review* calls for it.
-4. Open one PR from `prototype` into `main` for the human to merge, and suggest setting
-   `mode: normal` in the same PR.
+4. Open one PR from the closing branch (which carries all of `prototype` plus the
+   closing work) into `main` for the human to merge, and suggest setting `mode: normal`
+   in the same PR.
 
