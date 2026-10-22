@@ -29,6 +29,8 @@ file, so Claude Code and other AGENTS.md-aware tools read the same rules.
 | [`documents/adr/`](documents/adr/README.md) | Architecture decision records (process: ADR 000) | Agent proposes, human merges |
 | [`documents/feature-list.json`](documents/feature-list.json) | **Single source of truth for slice status** (`passes`) | Agent — see rules below |
 | `documents/claude-progress.md` | Session hand-off log (created by the initializer) | Agent, every session |
+| [`documents/harness-mode`](documents/harness-mode) | `normal` or `prototype` (see *Prototype mode*) and the chain limit | Human only |
+| [`documents/decision-log.md`](documents/decision-log.md) | Options the agent accepted on the human's behalf in prototype mode | Agent (prototype mode) |
 | [`scripts/init.sh`](scripts/init.sh) | Set up the dev environment + smoke test | Initializer, then as needed |
 | [`scripts/test.sh`](scripts/test.sh) | Run the full test suite (in parallel where the runner can) — the only test entry point; `--baseline` skips an unchanged one | Initializer, then as needed |
 | `documents/test-baseline.json` | The last full run's result and the code's fingerprint, written by `scripts/test.sh` | `scripts/test.sh`; committed with the slice |
@@ -44,8 +46,9 @@ existing entries — raise it with the human instead.
 ## Session startup
 
 A `SessionStart` hook ([`.claude/hooks/session-start.sh`](.claude/hooks/session-start.sh))
-prints the working directory, branch, recent commits, the progress log and the pending
-slices into context. Using that output:
+prints the working directory, branch, recent commits, the harness mode, the progress log
+and the pending slices into context. If the mode is `prototype`, *Prototype mode* below
+overrides parts of this file. Using that output:
 
 1. **Initializer check** — if the hook reports no `documents/claude-progress.md`, follow
    *Initializer* below instead.
@@ -204,3 +207,82 @@ Pause and ask before proceeding if:
 - A decision affects the data model or an API contract.
 - Tests fail and the cause is unclear after one investigation pass.
 - You are about to delete or overwrite something non-trivial.
+
+---
+
+## Prototype mode
+
+When `documents/harness-mode` says `mode: prototype`, development is fast-tracked: the
+agent decides instead of asking, and chains slices without waiting for merges. Everything
+it decides is still recorded for review afterwards. These rules override the sections
+above; anything not mentioned here is unchanged. Only the human switches the mode.
+
+**Decisions.** Where the agent would ask the human to choose, it takes its recommended
+option and carries on. Each such choice gets an entry in
+[`documents/decision-log.md`](documents/decision-log.md): every option considered, the one
+chosen and why, and `Review: pending`.
+
+**ADRs.** The investigation and the ADR are done exactly as in normal mode, but the agent
+accepts the ADR itself: `status: accepted`, `decision-makers: auto-accepted in prototype
+mode (<slice-id>)` and `review: pending` in the front matter, plus a decision-log entry.
+
+**Hard stops — never auto-accepted.** Stop the chain, write the question under *Blockers*
+in the progress log, and wait for the human when:
+
+- a slice needs an external account, a credential, or anything that costs money;
+- infrastructure must be provisioned;
+- an action is destructive or irreversible (deleting or overwriting non-trivial work,
+  force-pushing, rewriting history, touching `main`);
+- anything involves secrets;
+- tests are red and the cause is unclear after one investigation pass;
+- a slice is dragging on (write it up as in *Working on a slice*).
+
+**Branches.** An integration branch `prototype` holds the chained slices; `main` is
+untouched until the prototype closes. If it does not exist yet, create it from `main`
+(`git push origin origin/main:refs/heads/prototype`). Each slice:
+
+1. Branches from it: `git fetch origin && git switch -c claude/<slice-id>-<desc> origin/prototype`.
+2. Finishes as in *Finishing a slice* — green tests and the **AI review at `high`** still
+   apply — then opens a PR into `prototype`, so every slice has its own reviewable PR.
+3. Merges itself: `git fetch origin prototype && git merge origin/prototype`. If the
+   merge brought anything, resolve any conflict (a conflict in
+   `documents/test-baseline.json` is resolved by the re-run), run `scripts/test.sh
+   --baseline` — it re-runs the full suite only if the code changed — and commit the
+   updated `documents/test-baseline.json`. Then `git push origin HEAD:prototype`. That fast-forwards `prototype` and GitHub marks the
+   PR merged. If the push is refused, fetch, merge and retry; never force.
+
+Review comments that arrive on an already-merged slice PR become a new slice.
+
+**Session-close every session** (one slice per session, so the hand-off matters):
+`feature-list.json` status, the progress log, `documents/test-baseline.json` (so the
+next session skips its baseline run), and `code-learnings` lessons. When a document uses a new acronym, add a one-line row to the
+glossary's *Acronyms* table so the harness checks stay green. **Deferred to
+prototype-close:** walkthroughs, the glossary's term definitions and `README.md`. Instead
+of a walkthrough, add a short *what and why* note for the slice to the progress log.
+
+**Chaining.** Every slice starts in a new session. After the slice is merged into
+`prototype`, if a `"passes": false` slice remains, no hard stop is open, and the chain is
+under `chain-limit` (from `documents/harness-mode`), start the next session yourself where
+the environment allows it (e.g. the `create_session` tool in Claude Code on the web), with
+this prompt:
+
+> Prototype chain N+1 of <chain-limit>. Continue the prototype in `<repo>`: follow
+> AGENTS.md (prototype mode) and implement the next pending slice.
+
+A session whose prompt carries no chain number was started by the human: it is chain 1.
+At the limit, or where no session can be started, stop and tell the human the chain has
+paused. Never start more than one next session.
+
+**Prototype-close.** When no slice is pending (or the human asks), run one closing
+session on a branch from `origin/prototype`:
+
+1. Write the deferred docs: walkthroughs (one combined walkthrough for the prototype is
+   fine), glossary term definitions, `README.md`.
+2. Review every decision-log entry and ADR with `review: pending` with the human: each
+   becomes `confirmed`, or `reopened` with a new slice appended (with the human's
+   agreement) to revisit it.
+3. Run the AI review at `high` on the whole prototype (`origin/main...HEAD`), plus
+   `security-review` where *Pre-PR AI review* calls for it.
+4. Open one PR from `prototype` into `main` for the human to merge, and suggest setting
+   `mode: normal` in the same PR.
+

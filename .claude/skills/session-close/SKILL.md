@@ -103,6 +103,20 @@ stop (see *Anti-patterns*).
 Stage explicit paths only (see [G-01](../code-learnings/SKILL.md#g-01)). Then continue
 with AGENTS.md › Git workflow › *Finishing a slice* (push, PR, ask the human to merge).
 
+## Prototype mode
+
+When `documents/harness-mode` says `prototype` (AGENTS.md › *Prototype mode*), this skill
+runs **every session**, but only steps 1–4 and 7, plus:
+
+- a one-line row in the glossary's *Acronyms* table for each new acronym (the harness
+  checks fail otherwise);
+- a short *what and why* note for the slice in the progress log, in place of a
+  walkthrough;
+- the decision-log entries for the slice are present (AGENTS.md › *Prototype mode*).
+
+Steps 5 and 6 (walkthrough, `README.md`) and the glossary's term definitions are deferred
+to the prototype-close session.
+
 ## Checklist
 
 - [ ] The harness checks pass; the recorded pass count is the last full run's on this code (step 1)
@@ -111,6 +125,8 @@ with AGENTS.md › Git workflow › *Finishing a slice* (push, PR, ask the human
 - [ ] Progress log *Next steps* has nothing already done, and each item cites an artefact
 - [ ] New `L-NN` entries cite a PR or commit
 - [ ] New walkthrough (if any) is linked from the walkthrough index and the progress log
+- [ ] `documents/test-baseline.json` is the last full run's, on this code (step 1)
+- [ ] Prototype mode: every auto-accepted choice of this slice is in the decision log
 
 ## Anti-patterns
 

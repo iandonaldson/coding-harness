@@ -43,6 +43,17 @@ each session starting cold.
 4. Each later session investigates, implements one slice on its own branch, runs an AI
    code review, runs `session-close`, and opens a PR for you to merge.
 
+### Prototype mode
+
+Set `mode: prototype` in `documents/harness-mode` to fast-track a prototype. The agent
+accepts its own recommended options and ADRs (recording every option in
+`documents/decision-log.md` for later review), merges each slice's PR into a `prototype`
+branch itself, and starts the next slice's session, up to `chain-limit` sessions in a row.
+It still stops for credentials, spending, infrastructure, destructive actions, secrets
+and unexplained test failures. A closing session writes the deferred docs, reviews every
+auto-accepted decision with you, and opens one PR from `prototype` into `main`. See
+[AGENTS.md › Prototype mode](AGENTS.md#prototype-mode).
+
 ### Layout
 
 ```
@@ -51,6 +62,8 @@ documents/
   product_description.md        what we're building
   feature-list.md               features + slice definitions
   feature-list.json             slice status (passes: true/false)
+  harness-mode                  normal | prototype, and the prototype chain limit
+  decision-log.md               options auto-accepted in prototype mode
   glossary.md                   controlled vocabulary + acronyms
   adr/                          architecture decision records (MADR; process in 000)
   claude-progress.md            session hand-off log (created by the initializer)

@@ -19,6 +19,16 @@ else
 fi
 
 echo
+MODE_FILE=documents/harness-mode
+MODE=$(sed -n 's/^mode:[[:space:]]*\([a-z]*\).*/\1/p' "$MODE_FILE" 2>/dev/null)
+echo "### Harness mode: ${MODE:-normal}"
+if [ "$MODE" = "prototype" ]; then
+  LIMIT=$(sed -n 's/^chain-limit:[[:space:]]*\([0-9]*\).*/\1/p' "$MODE_FILE")
+  echo "PROTOTYPE MODE — follow AGENTS.md › Prototype mode. Slices branch from and merge"
+  echo "into origin/prototype; chain-limit: ${LIMIT:-10} sessions in a row."
+fi
+
+echo
 PROGRESS=documents/claude-progress.md
 if [ -f "$PROGRESS" ]; then
   echo "### $PROGRESS"
