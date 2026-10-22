@@ -16,6 +16,7 @@ GLOSSARY = ROOT / "documents" / "glossary.md"
 
 ADR_NAME = re.compile(r"^(\d{3})-[a-z0-9]+(?:-[a-z0-9]+)*\.md$")
 STATUSES = {"proposed", "accepted", "rejected", "deprecated", "superseded"}
+REVIEWS = {"pending", "confirmed", "reopened"}  # prototype mode (ADR 000, step 5)
 # MADR 4.0 sections every ADR keeps, plus the investigation record (ADR 000).
 REQUIRED_SECTIONS = (
     "## Context and Problem Statement",
@@ -65,6 +66,8 @@ for adr in adrs:
         re.search(r"^date:\s*\d{4}-\d{2}-\d{2}$", front[1], re.M) is not None,
         f"{adr.name}: has a date",
     )
+    review = re.search(r"^review:\s*(\S+)", front[1], re.M)
+    check(review is None or review[1] in REVIEWS, f"{adr.name}: review is one of {REVIEWS}")
     check(re.search(r"^# \S", text, re.M) is not None, f"{adr.name}: has a title")
     for section in REQUIRED_SECTIONS:
         check(section in text, f"{adr.name}: has {section!r}")

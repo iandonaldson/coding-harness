@@ -2,6 +2,7 @@
 status: proposed
 date: YYYY-MM-DD
 decision-makers: <human owner>; proposed by <agent/session, slice id>
+# review: pending   # prototype mode only — see ADR 000, step 5
 ---
 
 # NNN. Short title of the decision

@@ -1,0 +1,4 @@
+# Harness mode — read by .claude/hooks/session-start.sh. See AGENTS.md › Prototype mode.
+# Only the human changes this file.
+mode: normal         # normal | prototype
+chain-limit: 10      # prototype: most sessions the agent starts in a row before the human

@@ -68,7 +68,9 @@ section records the investigation. We do not invent a format.
    integration cost, and cites its sources. Not adopting a relevant open standard needs a
    stated reason.
 5. An agent writes an ADR as `proposed`. It is accepted when the human merges the pull
-   request; merging is the approval.
+   request; merging is the approval. In prototype mode (AGENTS.md › Prototype mode) the
+   agent accepts it itself and adds `review: pending` to the front matter; the
+   prototype-close review sets it to `confirmed` or `reopened`.
 6. Accepted ADRs are not rewritten. A changed decision gets a new ADR, and the old one's
    status becomes `superseded` (naming the new ADR). Typos and broken links may be fixed in
    place.

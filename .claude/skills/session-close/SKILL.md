@@ -35,7 +35,8 @@ Record the pass count of the last full `scripts/test.sh` run on the code being c
 fold-in mode, the run made after the slice's last code change (AGENTS.md › *Finishing a
 slice*); in standalone mode, the count recorded in the progress log for `main`. Run the full
 suite only when no such run exists for the current code. If it is red beyond the known
-failures, stop and ask the human — fixing code is out of scope here.
+failures, stop and ask the human — fixing code is out of scope here. Note that run's
+`scripts/fingerprint.sh` output (taken with the slice's code committed) for step 3.
 
 ### 2. Slice status — `documents/feature-list.json` and `feature-list.md`
 
@@ -54,6 +55,8 @@ Update the sections defined in
 [`documents/templates/claude-progress.template.md`](../../../documents/templates/claude-progress.template.md):
 
 - **Last updated / Current status / Active slice / Test status** — reflect this session.
+  *Test status* gets the full run's result and its `Fingerprint:` (step 1); the next
+  session skips its baseline run when the code still matches it.
 - **Walkthroughs** — add any walkthrough written in step 5.
 - **Next steps** — remove what's done; add gaps this session *found* but didn't fix. Order:
   blockers > behaviour gaps > polish. Every item must trace to an artefact (TODO, failing
@@ -100,6 +103,20 @@ stop (see *Anti-patterns*).
 Stage explicit paths only (see [G-01](../code-learnings/SKILL.md#g-01)). Then continue
 with AGENTS.md › Git workflow › *Finishing a slice* (push, PR, ask the human to merge).
 
+## Prototype mode
+
+When `documents/harness-mode` says `prototype` (AGENTS.md › *Prototype mode*), this skill
+runs **every session**, but only steps 1–4 and 7, plus:
+
+- a one-line row in the glossary's *Acronyms* table for each new acronym (the harness
+  checks fail otherwise);
+- a short *what and why* note for the slice in the progress log, in place of a
+  walkthrough;
+- the decision-log entries for the slice are present (AGENTS.md › *Prototype mode*).
+
+Steps 5 and 6 (walkthrough, `README.md`) and the glossary's term definitions are deferred
+to the prototype-close session.
+
 ## Checklist
 
 - [ ] The harness checks pass; the recorded pass count is the last full run's on this code (step 1)
@@ -108,6 +125,8 @@ with AGENTS.md › Git workflow › *Finishing a slice* (push, PR, ask the human
 - [ ] Progress log *Next steps* has nothing already done, and each item cites an artefact
 - [ ] New `L-NN` entries cite a PR or commit
 - [ ] New walkthrough (if any) is linked from the walkthrough index and the progress log
+- [ ] *Test status* has the last full run's result and fingerprint
+- [ ] Prototype mode: every auto-accepted choice of this slice is in the decision log
 
 ## Anti-patterns
 
