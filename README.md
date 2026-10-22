@@ -17,6 +17,8 @@ scripts/test.sh           # run the test suite
 
 - [Product description](documents/product_description.md)
 - [Feature list](documents/feature-list.md) — slice status in [feature-list.json](documents/feature-list.json)
+- [Architecture decision records](documents/adr/README.md)
+- [Glossary](documents/glossary.md)
 - [Code walkthroughs](documents/code_walkthroughs/README.md)
 - [Agent operating instructions](AGENTS.md)
 
@@ -36,10 +38,10 @@ each session starting cold.
    (elephant carpaccio). Remove the `TEMPLATE PLACEHOLDER` markers.
 3. Start a new session. The `SessionStart` hook sees there is no
    `documents/claude-progress.md`, so the agent runs the **initializer**: it fills in
-   `feature-list.json`, `scripts/init.sh`, `scripts/test.sh` and the `<…>` placeholders,
-   and commits.
-4. Each later session implements one slice on its own branch, runs `session-close`, and
-   opens a PR for you to merge.
+   `feature-list.json`, `scripts/init.sh`, `scripts/test.sh`, ADR 001 (the stack), the
+   glossary and the `<…>` placeholders, and commits.
+4. Each later session investigates, implements one slice on its own branch, runs an AI
+   code review, runs `session-close`, and opens a PR for you to merge.
 
 ### Layout
 
@@ -49,14 +51,17 @@ documents/
   product_description.md        what we're building
   feature-list.md               features + slice definitions
   feature-list.json             slice status (passes: true/false)
+  glossary.md                   controlled vocabulary + acronyms
+  adr/                          architecture decision records (MADR; process in 000)
   claude-progress.md            session hand-off log (created by the initializer)
   templates/                    template for the progress log
   code_walkthroughs/            NNN.<name>.md reference docs
-scripts/init.sh, scripts/test.sh
+scripts/init.sh, scripts/test.sh  (test.sh --harness: harness checks only)
+tests/harness/                  stdlib checks on the feature list, ADRs and glossary
 .claude/
   settings.json                 shared hooks + permissions (committed)
   hooks/session-start.sh        injects git state + progress into each session
-  skills/                       code-learnings, session-close, code-walkthrough, debate
+  skills/                       code-learnings, session-close, code-walkthrough, debate, find-skills
   agents/                       writer, critic (used by debate)
 results/, data/                 local outputs and inputs (gitignored)
 ```

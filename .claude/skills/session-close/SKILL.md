@@ -31,8 +31,11 @@ through git history. It changes **only docs**; it never alters code or test coun
 
 ### 1. Baseline
 
-Run `scripts/test.sh` and record the pass count. If it is red, stop and ask the human —
-fixing code is out of scope here.
+Record the pass count of the last full `scripts/test.sh` run on the code being closed: in
+fold-in mode, the run made after the slice's last code change (AGENTS.md › *Finishing a
+slice*); in standalone mode, the count recorded in the progress log for `main`. Run the full
+suite only when no such run exists for the current code. If it is red beyond the known
+failures, stop and ask the human — fixing code is out of scope here.
 
 ### 2. Slice status — `documents/feature-list.json` and `feature-list.md`
 
@@ -82,18 +85,24 @@ Update the sections the slice affected — usage/CLI, configuration, architectur
 ### 7. Verify and commit
 
 ```bash
-scripts/test.sh                     # same pass count as step 1
+scripts/test.sh --harness           # the tests docs can break
 git diff --stat                     # docs only
 git add documents/ README.md .claude/skills/code-learnings/SKILL.md
 git commit -m "docs: close <slice-id> — progress, learnings, walkthrough"
 ```
+
+A docs-only change cannot change the full suite's count, so the full suite is not re-run
+here: the docs can break only the harness checks (`tests/harness/`: the feature list, ADR
+index and glossary acronyms), which run in seconds. If `git diff --stat` shows anything
+outside `documents/`, `README.md` and `.claude/skills/code-learnings/`, it is not a close:
+stop (see *Anti-patterns*).
 
 Stage explicit paths only (see [G-01](../code-learnings/SKILL.md#g-01)). Then continue
 with AGENTS.md › Git workflow › *Finishing a slice* (push, PR, ask the human to merge).
 
 ## Checklist
 
-- [ ] Test pass count unchanged from step 1
+- [ ] The harness checks pass; the recorded pass count is the last full run's on this code (step 1)
 - [ ] `git diff --stat` shows only `documents/`, `README.md`, `.claude/skills/code-learnings/`
 - [ ] `feature-list.json` `passes` values match reality; no existing entries edited
 - [ ] Progress log *Next steps* has nothing already done, and each item cites an artefact
