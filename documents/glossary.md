@@ -27,7 +27,11 @@ fails on one that is not. Codes and keywords that are not acronyms go in that te
 | **AI** | Artificial intelligence | |
 | **API** | Application programming interface | |
 | **CC0** | Creative Commons Zero public-domain dedication | A licence |
+| **ETH** | Eidgenössische Technische Hochschule (ETH Zürich) | A university; cited in the README |
+| **JSON** | JavaScript Object Notation | `feature-list.json`, `test-baseline.json` |
+| **LLM** | Large language model | |
 | **MADR** | Markdown Architectural Decision Records | The ADR template (ADR 000) |
+| **METR** | Model Evaluation & Threat Research | AI evaluation non-profit; cited in the README |
 | **MIT** | MIT License (Massachusetts Institute of Technology) | A permissive licence |
 | **PR** | Pull request | |
 | **YAML** | YAML Ain't Markup Language | Used for ADR front matter |
